@@ -16,32 +16,33 @@ import codecs
 #
 
 # Fetch data (change lat and lon to desired location)
-weather_xml = urllib2.urlopen('http://graphical.weather.gov/xml/SOAP_server/ndfdSOAPclientByDay.php?whichClient=NDFDgenByDay&lat=39.3286&lon=-76.6169&format=24+hourly&numDays=4&Unit=e').read()
+CODE = '727232'
+weather_xml = urllib2.urlopen('http://weather.yahooapis.com/forecastrss?w=' + CODE + '&u=c').read()
 dom = minidom.parseString(weather_xml)
 
 # Parse temperatures
-xml_temperatures = dom.getElementsByTagName('temperature')
-highs = [None]*4
-lows = [None]*4
+xml_temperatures = dom.getElementsByTagName('yweather:forecast')
+dates = [None]*5
+highs = [None]*5
+lows = [None]*5
+icons = [None]*5
+i = 0
 for item in xml_temperatures:
-    if item.getAttribute('type') == 'maximum':
-        values = item.getElementsByTagName('value')
-        for i in range(len(values)):
-            highs[i] = int(values[i].firstChild.nodeValue)
-    if item.getAttribute('type') == 'minimum':
-        values = item.getElementsByTagName('value')
-        for i in range(len(values)):
-            lows[i] = int(values[i].firstChild.nodeValue)
+    dates[i] = item.getAttribute('date')
+    highs[i] = int(item.getAttribute('high'))
+    lows[i] = int(item.getAttribute('low'))
+    image_url = 'icons/' + item.getAttribute('code') + '.svg'
 
-# Parse icons
-xml_icons = dom.getElementsByTagName('icon-link')
-icons = [None]*4
-for i in range(len(xml_icons)):
-    icons[i] = xml_icons[i].firstChild.nodeValue.split('/')[-1].split('.')[0].rstrip('0123456789')
+    f = codecs.open(image_url ,'r', encoding='utf-8')
+    f.readline()
+    icons[i] = f.readline()
+    f.close()
+
+    i = i + 1
 
 # Parse dates
-xml_day_one = dom.getElementsByTagName('start-valid-time')[0].firstChild.nodeValue[0:10]
-day_one = datetime.datetime.strptime(xml_day_one, '%Y-%m-%d')
+xml_day_one = dates[0]
+day_one = datetime.datetime.strptime(xml_day_one, '%d %b %Y')
 
 
 
